@@ -85,7 +85,7 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = i.getContent();
         db.insert(IMAGE_TABLE_NAME, null, values);
-        //db.close();
+        db.close();
     }
 
     public void addUser(User u) {
@@ -98,7 +98,7 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(USER_COLUMN_LNAME, u.getLastname());
 
         db.insert(USER_TABLE_NAME, null, values);
-        //db.close();
+        db.close();
     }
     //
 //    //REMOVE
@@ -106,19 +106,20 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(IMAGE_TABLE_NAME, DATABASE_ID + " = ?",
                 new String[] {id});
+        db.close();
     }
 
     public void removeUser(String id) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(USER_TABLE_NAME, DATABASE_ID + " = ?",
                 new String[] {id});
+        db.close();
     }
     //
 //    //GET
 
     public Image getImage(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
-
         Cursor cursor = db.query(IMAGE_TABLE_NAME,
                 IMAGE_COLUMN_STRING,
                 DATABASE_ID + "=?",
@@ -129,12 +130,14 @@ public class DBHelper extends SQLiteOpenHelper {
                 null);
         if (cursor != null)
             cursor.moveToFirst();//db.close();
-        return new Image(cursor);
+        Image i = new Image(cursor);
+        //cursor.close();
+        db.close();
+        return i;
     }
 
     public User getUser(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
-
         Cursor cursor = db.query(USER_TABLE_NAME,
                 new String[] {DATABASE_ID, USER_COLUMN_USERNAME, USER_COLUMN_PASSWORD, USER_COLUMN_FNAME, USER_COLUMN_LNAME},
                 DATABASE_ID + "=?",
@@ -145,13 +148,16 @@ public class DBHelper extends SQLiteOpenHelper {
                 null);
         if (cursor != null)
             cursor.moveToFirst();//db.close();
-        return new User(
+        User u = new User(
                 cursor.getInt(0), //id
                 cursor.getString(1), //username
                 cursor.getString(2), //password
                 cursor.getString(3), //first name
                 cursor.getString(4) //last name
         );
+        cursor.close();
+        db.close();
+        return u;
     }
 //
     //GET ALL
@@ -160,15 +166,14 @@ public class DBHelper extends SQLiteOpenHelper {
         String selectQuery = "SELECT * FROM " + IMAGE_TABLE_NAME + " ORDER BY ID ASC";
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
-
         if (cursor.moveToFirst()) {
             do {
                 Image temp = new Image(cursor);
                 images.add(temp);
             } while (cursor.moveToNext());
         }
-        //db.close();
         cursor.close();
+        db.close();
         return images;
     }
 
@@ -186,8 +191,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 }
             } while (cursor.moveToNext());
         }
-        //db.close();
         cursor.close();
+        db.close();
         return images;
     }
 

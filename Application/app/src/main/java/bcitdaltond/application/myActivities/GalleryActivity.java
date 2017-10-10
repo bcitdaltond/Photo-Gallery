@@ -23,6 +23,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateFormat;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -42,6 +43,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,66 +58,15 @@ import bcitdaltond.application.testActivities.MainActivity;
 public class GalleryActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private final String image_titles = "Default";
-    private final Integer image_ids = R.drawable.icon;
-
-//    private final String image_titles[] = {
-//            "Img1",
-//            "Img2",
-//            "Img3",
-//            "Img4",
-//            "Img5",
-//            "Img6",
-//            "Img7",
-//            "Img8",
-//            "Img9",
-//            "Img10",
-//            "Img11",
-//            "Img12",
-//            "Img13",
-//    };
-//
-//    private final Integer image_ids[] = {
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//            R.drawable.icon,
-//    };
-//
-//    private final String image_dates[] = {
-//            "9-11-2017",
-//            "9-12-2017",
-//            "9-12-2017",
-//            "9-13-2017",
-//            "9-14-2017",
-//            "9-15-2017",
-//            "9-16-2017",
-//            "9-18-2017",
-//            "9-19-2017",
-//            "9-20-2017",
-//            "9-20-2017",
-//            "9-22-2017",
-//            "9-23-2017",
-//    };
-
     private String date = null;
-    private static final int REQUEST_RUNTIME_PERMISSION = 1;
-
+    private static final int REQUEST_RUNTIME_PERMISSION = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
+        //Checks Permissions of the Application
         checkPermissions();
 
         //Getting Intents
@@ -125,7 +76,7 @@ public class GalleryActivity extends AppCompatActivity
         }
 
         //Image Gallery
-        RecyclerView recyclerView = (RecyclerView)findViewById(R.id.imagegallery);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.imagegallery);
         recyclerView.setHasFixedSize(true);
 
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(),4);
@@ -139,14 +90,15 @@ public class GalleryActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        //Floating Email Button
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -203,8 +155,6 @@ public class GalleryActivity extends AppCompatActivity
             // Dialog Box
             Intent intent = new Intent(this, UploadActivity.class);
             startActivity(intent);
-        } else if (id == R.id.nav_gallery) {
-            // Ignored
         } else if (id == R.id.nav_filter) {
             Intent intent = new Intent(this, FilterActivity.class);
             startActivity(intent);
@@ -229,11 +179,16 @@ public class GalleryActivity extends AppCompatActivity
         ArrayList<CreateList> theimage = new ArrayList<>();
         ArrayList<Image> images = DBHelper.getInstance(this).getAllImages();
         if (images.size() == 0) {
+            //Dummy Picture and Title Name
+            final String image_titles = "Default";
+            final Integer image_ids = R.drawable.icon;
+
             CreateList createList = new CreateList();
+            createList.setImage_id(-1);
             createList.setImage_title(image_titles);
             Bitmap icon = BitmapFactory.decodeResource(this.getResources(),
                     image_ids);
-            createList.setImage_ID(icon);
+            createList.setImage_bitmap(icon);
             theimage.add(createList);
         } else {
             for(int i = 0; i < images.size(); i++){
@@ -241,6 +196,8 @@ public class GalleryActivity extends AppCompatActivity
                 if (date != null) {
                     if (images.get(i).getDate().equals("" + date)) {
                         CreateList createList = new CreateList();
+                        //ID
+                        createList.setImage_id(i);
                         //Caption Name
                         createList.setImage_title(images.get(i).getCaption());
                         //Image
@@ -253,24 +210,36 @@ public class GalleryActivity extends AppCompatActivity
                             e.printStackTrace();
                         }
 
-                        createList.setImage_ID(thumbnail);
+                        createList.setImage_bitmap(thumbnail);
                         theimage.add(createList);
                     }
                 } else {
-                     CreateList createList = new CreateList();
+                    CreateList createList = new CreateList();
+                    //ID
+                    createList.setImage_id(i);
                     //Caption Name
                     createList.setImage_title(images.get(i).getCaption());
                     //Image
                     Uri image = Uri.parse(images.get(i).getUri());
 
+//                    Bitmap thumbnail = null;
+//                    try {
+//                        thumbnail = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), image);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+
                     Bitmap thumbnail = null;
                     try {
-                        thumbnail = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), image);
+                        InputStream image_stream = getContentResolver().openInputStream(image);
+                        thumbnail = BitmapFactory.decodeStream(image_stream );
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
-                    createList.setImage_ID(thumbnail);
+
+
+                    createList.setImage_bitmap(thumbnail);
                     theimage.add(createList);
                 }
             }
@@ -311,7 +280,7 @@ public class GalleryActivity extends AppCompatActivity
             }
         } else {
             // you have permission go ahead
-            //capturarFoto();
+            // ignored
         }
     }
 
@@ -324,7 +293,7 @@ public class GalleryActivity extends AppCompatActivity
                         && PackageManager.PERMISSION_GRANTED == grantResults[numOfRequest - 1];
                 if (isGranted) {
                     // you have permission go ahead
-                    //capturarFoto();
+                    // ignored
                 }else{
                     // you dont have permission show toast
                 }
@@ -333,8 +302,4 @@ public class GalleryActivity extends AppCompatActivity
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
-
-
-
-
 }

@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.MediaStore;
@@ -67,14 +68,22 @@ public class UploadActivity extends AppCompatActivity {
         ivImage = (ImageView) findViewById(R.id.image);
         editCaption = (EditText) findViewById(R.id.captionText);
         editDate = (TextView) findViewById(R.id.dateText);
+
+        Calendar mcurrentDate = Calendar.getInstance();
+        mYear = mcurrentDate.get(Calendar.YEAR);
+        mMonth = mcurrentDate.get(Calendar.MONTH);
+        mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+
         editDate.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 //To show current date in the date picker
-                Calendar mcurrentDate = Calendar.getInstance();
-                mYear = mcurrentDate.get(Calendar.YEAR);
-                mMonth = mcurrentDate.get(Calendar.MONTH);
-                mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+
+                //NOTE: Sets the initial date to today
+                //Calendar mcurrentDate = Calendar.getInstance();
+                //mYear = mcurrentDate.get(Calendar.YEAR);
+                //mMonth = mcurrentDate.get(Calendar.MONTH);
+                //mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
 
                 DatePickerDialog mDatePicker = new DatePickerDialog(UploadActivity.this, new DatePickerDialog.OnDateSetListener() {
                     public void onDateSet(DatePicker datepicker, int year, int month, int day) {
@@ -88,11 +97,24 @@ public class UploadActivity extends AppCompatActivity {
                 return false;
             }
         });
+        editDate.setText("" + (mMonth + 1) + "-" + mDay + "-" + mYear);
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, GalleryActivity.class);
+        getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
+        startActivity(intent);
+        //super.onBackPressed();
     }
 
     public void setDate(int year, int month, int day) {
+        //EXAMPLE Date Format:
         //"9-11-2017"
-        editDate.setText("" + month + "-" + day + "-" + year  );
+        mYear = year;
+        mMonth = month;
+        mDay = day;
+        editDate.setText("" + (month + 1) + "-" + day + "-" + year  );
     }
 
     public void uploadOptions(View view) {
@@ -132,10 +154,27 @@ public class UploadActivity extends AppCompatActivity {
     }
 
     private void getPicture() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);//
-        startActivityForResult(Intent.createChooser(intent, "Select File"), SELECT_FILE);
+//        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//        intent.setType("image/*");
+//
+//        //OLD:
+//        //startActivityForResult(Intent.createChooser(intent, "Select File"), SELECT_FILE);
+//        //NEW:
+//        startActivityForResult(intent, SELECT_FILE);
+
+        Intent intent;
+
+        if (Build.VERSION.SDK_INT < 19) {
+            intent = new Intent();
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            startActivityForResult(intent, SELECT_FILE);
+        } else {
+            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("image/*");
+            startActivityForResult(intent, SELECT_FILE);
+        }
     }
 
     @Override
@@ -152,7 +191,13 @@ public class UploadActivity extends AppCompatActivity {
 
     @SuppressWarnings("deprecation")
     private void onSelectFromGalleryResult(Intent data) {
-        currentURI = data.getData();
+        Uri uri = data.getData();
+
+        //MUST HAVE PERMISSION!
+        this.grantUriPermission(this.getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        this.getContentResolver().takePersistableUriPermission(data.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        currentURI = uri;
+
         Bitmap bm = null;
         try {
             bm = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), currentURI);
@@ -190,16 +235,30 @@ public class UploadActivity extends AppCompatActivity {
 
     public void uploadPicture(View view) {
         //Do some database work here...
-        DBHelper db = DBHelper.getInstance(this);
-        DBHelper.getInstance(this).addImage(
-                new Image(
-                        0,
-                        currentURI.toString(),
-                        editCaption.getText().toString(),
-                        "description",
-                        "" + mMonth + "-" + mDay + "-" + mYear)
-        );
-        Intent intent = new Intent(this, GalleryActivity.class);
-        startActivity(intent);
+        if (editCaption.getText().toString().equals("")) {
+            new AlertDialog.Builder(UploadActivity.this)
+                    .setTitle("Missing Input")
+                    .setMessage("Uploaded photo's must have a Caption")
+                    .setCancelable(true)
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //ignored
+                        }
+                    })
+                    .show();
+        } else {
+            DBHelper.getInstance(this).addImage(
+                    new Image(
+                            0,
+                            currentURI.toString(),
+                            editCaption.getText().toString(),
+                            "description",
+                            "" + (mMonth + 1) + "-" + mDay + "-" + mYear)
+            );
+            Intent intent = new Intent(this, GalleryActivity.class);
+            getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
+            startActivity(intent);
+        }
     }
 }

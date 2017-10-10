@@ -35,22 +35,30 @@ public class ExampleInstrumentedTest {
 
     private DBHelper dbHelper;
 
-    @Before
-    public void setUp(){
-        dbHelper = DBHelper.getInstance(InstrumentationRegistry.getTargetContext());
-        for (int i = 10; i < 20; i++) {
-            Image img = new Image(i, "uri" + i, "caption", "description", "9-" + i + "-2017");
-            dbHelper.addImage(img);
-        }
-
-    }
-
-    @After
-    public void finish() {
+    private void removeImages() {
         ArrayList<Image> images = dbHelper.getAllImages();
         for (int i = 0; i < images.size(); i++) {
             dbHelper.removeImage("" + images.get(i).getId());
         }
+    }
+
+    private void addImages() {
+        for (int i = 10; i < 20; i++) {
+            Image img = new Image(i, "uri" + i, "caption", "description", "9-" + i + "-2017");
+            dbHelper.addImage(img);
+        }
+    }
+
+    @Before
+    public void setUp(){
+        dbHelper = DBHelper.getInstance(InstrumentationRegistry.getTargetContext());
+        removeImages();
+        addImages();
+    }
+
+    @After
+    public void finish() {
+        removeImages();
         dbHelper.close();
     }
 

@@ -1,10 +1,12 @@
 package bcitdaltond.application.myDatabase;
 
+import android.content.ContentValues;
+
 /**
  * Created by runej on 2017-09-19.
  */
 
-public class User {
+public class User implements IDBClass {
     private int id;
     private String username; //email
     private String password;
@@ -69,5 +71,9 @@ public class User {
 
     public String getFirstname() {
         return this.firstname;
+    }
+
+    public ContentValues getContent() {
+        return null;
     }
 }

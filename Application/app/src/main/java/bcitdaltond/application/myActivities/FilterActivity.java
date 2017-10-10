@@ -23,7 +23,7 @@ public class FilterActivity extends AppCompatActivity {
 
     public String getDate() {
         DatePicker picker = (DatePicker) findViewById(R.id.datePicker);
-        return "" + picker.getMonth() + "-" + picker.getDayOfMonth() + "-" + picker.getYear();
+        return "" + (picker.getMonth() + 1) + "-" + picker.getDayOfMonth() + "-" + picker.getYear();
     }
 
     public void applyFilters(View view) {

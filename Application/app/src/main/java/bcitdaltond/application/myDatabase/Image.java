@@ -7,7 +7,7 @@ import android.database.Cursor;
  * Created by runej on 2017-10-03.
  */
 
-public class Image {
+public class Image implements IDBClass {
     private int id;
     private String uri;
     private String caption;

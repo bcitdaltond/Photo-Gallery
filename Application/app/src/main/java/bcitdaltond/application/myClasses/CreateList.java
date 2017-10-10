@@ -8,23 +8,31 @@ import android.net.Uri;
  */
 
 public class CreateList {
-
+    private int image_id;
     private String image_title;
-    private Bitmap image_id;
+    private Bitmap image_bitmap;
 
     public String getImage_title() {
         return image_title;
     }
 
-    public void setImage_title(String android_version_name) {
-        this.image_title = android_version_name;
+    public void setImage_title(String image_name) {
+        this.image_title = image_name;
     }
 
-    public Bitmap getImage_ID() {
+    public int getImage_id() {
         return image_id;
     }
 
-    public void setImage_ID(Bitmap android_image_url) {
-        this.image_id = android_image_url;
+    public void setImage_id(int image_id) {
+        this.image_id = image_id;
+    }
+
+    public Bitmap getImage_bitmap() {
+        return image_bitmap;
+    }
+
+    public void setImage_bitmap(Bitmap image_bitmap) {
+        this.image_bitmap = image_bitmap;
     }
 }
