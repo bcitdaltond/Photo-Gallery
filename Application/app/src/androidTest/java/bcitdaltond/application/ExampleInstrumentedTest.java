@@ -1,6 +1,7 @@
 package bcitdaltond.application;
 
 import android.content.Context;
+import android.os.Build;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import bcitdaltond.application.myDatabase.DBHelper;
 import bcitdaltond.application.myDatabase.Image;
 import bcitdaltond.application.myDatabase.User;
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 
 import static org.junit.Assert.*;
 
@@ -29,7 +31,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() throws Exception {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
-
         assertEquals("bcitdaltond.application", appContext.getPackageName());
     }
 
@@ -51,6 +52,12 @@ public class ExampleInstrumentedTest {
 
     @Before
     public void setUp(){
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            getInstrumentation().getUiAutomation().executeShellCommand(
+//                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
+//                            + " android.permission.READ_EXTERNAL_STORAGE");
+//        }
+
         dbHelper = DBHelper.getInstance(InstrumentationRegistry.getTargetContext());
         removeImages();
         addImages();
@@ -87,5 +94,22 @@ public class ExampleInstrumentedTest {
 
         images = dbHelper.getDateImages("9-9-2017");
         assertEquals(0, images.size());
+    }
+
+    @Test
+    public void DBHelper_remove() throws Exception {
+        ArrayList<Image> images = null;
+
+        images = dbHelper.getAllImages();
+        assertEquals(10, images.size());
+
+        for (int i = 0; i < images.size() - 7; i++) {
+            Log.d("IMAGE ID: ", "" + images.get(i).getId());
+            dbHelper.removeImage("" + images.get(i).getId());
+        }
+
+        //10 - 3 = 7
+        images = dbHelper.getAllImages();
+        assertEquals(7, images.size());
     }
 }

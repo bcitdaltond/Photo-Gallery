@@ -55,6 +55,10 @@ import bcitdaltond.application.myDatabase.DBHelper;
 import bcitdaltond.application.myDatabase.Image;
 import bcitdaltond.application.testActivities.MainActivity;
 
+
+/**
+ * JENKINS PASSWORD: 4f86858eb58c4fe598002d8b176470a2
+ */
 public class GalleryActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
