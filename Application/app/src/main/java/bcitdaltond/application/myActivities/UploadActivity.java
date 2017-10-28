@@ -103,7 +103,8 @@ public class UploadActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         Intent intent = new Intent(this, GalleryActivity.class);
-        getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
+        //TODO: REMOVE MESSAGES
+        //getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
         startActivity(intent);
         //super.onBackPressed();
     }
@@ -185,7 +186,6 @@ public class UploadActivity extends AppCompatActivity {
                 onSelectFromGalleryResult(data);
             else if (requestCode == REQUEST_CAMERA)
                 onCaptureImageResult(data);
-
         }
     }
 
@@ -253,11 +253,12 @@ public class UploadActivity extends AppCompatActivity {
                             0,
                             currentURI.toString(),
                             editCaption.getText().toString(),
-                            "description",
-                            "" + (mMonth + 1) + "-" + mDay + "-" + mYear)
+                            "" + (mMonth + 1) + "-" + mDay + "-" + mYear,
+                            "0.0,0.0")
             );
             Intent intent = new Intent(this, GalleryActivity.class);
-            getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
+            //TODO: REMOVE MESSAGE
+            //getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
             startActivity(intent);
         }
     }

@@ -1,31 +1,19 @@
 package bcitdaltond.application.myActivities;
 
 import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.format.DateFormat;
-import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -34,30 +22,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 import bcitdaltond.application.R;
 import bcitdaltond.application.myClasses.CreateList;
 import bcitdaltond.application.myClasses.MyAdapter;
 import bcitdaltond.application.myDatabase.DBHelper;
 import bcitdaltond.application.myDatabase.Image;
-import bcitdaltond.application.testActivities.MainActivity;
 
 
 /**
- * JENKINS PASSWORD: 4f86858eb58c4fe598002d8b176470a2
+ * Jenkins!
  */
 public class GalleryActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -70,13 +48,16 @@ public class GalleryActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
+        //DBHelper.getInstance(this).dropAllTables();
+
         //Checks Permissions of the Application
         checkPermissions();
 
         //Getting Intents
         Intent intent = getIntent();
         if (intent != null) {
-            date = intent.getStringExtra(FilterActivity.EXTRA_MESSAGE);
+            //TODO: REMOVE MESSAGE
+            //date = intent.getStringExtra(FilterActivity.EXTRA_MESSAGE);
         }
 
         //Image Gallery
@@ -280,7 +261,7 @@ public class GalleryActivity extends AppCompatActivity
             if (ActivityCompat.shouldShowRequestPermissionRationale(GalleryActivity.this, permission)) {
 
             } else {
-                ActivityCompat.requestPermissions(GalleryActivity.this, new String[]{Manifest.permission.CAMERA,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_RUNTIME_PERMISSION);
+                ActivityCompat.requestPermissions(GalleryActivity.this, new String[]{Manifest.permission.CAMERA,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.INTERNET, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_RUNTIME_PERMISSION);
             }
         } else {
             // you have permission go ahead

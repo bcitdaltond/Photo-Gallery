@@ -69,7 +69,8 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         Intent intent = new Intent(this, GalleryActivity.class);
-        getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
+        //TODO: REMOVE MESSAGE
+        //getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
         startActivity(intent);
         //super.onBackPressed();
     }
@@ -131,13 +132,15 @@ public class DetailActivity extends AppCompatActivity {
     public void removeImage() {
         DBHelper.getInstance(this).removeImage("" + id);
         Intent intent = new Intent(this, GalleryActivity.class);
-        getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
+        //TODO: REMOVE MESSAGE
+        //getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
         startActivity(intent);
     }
 
     public void back(View view) {
         Intent intent = new Intent(this, GalleryActivity.class);
-        getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
+        //TODO: REMOVE MESSAGE
+        //getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
         startActivity(intent);
     }
 }

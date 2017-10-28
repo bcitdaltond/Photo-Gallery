@@ -24,7 +24,7 @@ public class DBHelper extends SQLiteOpenHelper {
     //Driver Table and Columns
     //table name
     public static final String IMAGE_TABLE_NAME = "image";
-    public static final String[] IMAGE_COLUMN_STRING = {"id", "uri", "caption", "description", "date"};
+    public static final String[] IMAGE_COLUMN_STRING = {"id", "uri", "caption", "date", "location"};
 
     //table name
     public static final String USER_TABLE_NAME = "user";
@@ -37,7 +37,7 @@ public class DBHelper extends SQLiteOpenHelper {
     private DBHelper(Context context) {
         super(context, DATABASE_NAME , null, DATABASE_VERSION);
         //Uncomment this to update the database to change column layout
-        //this.onUpgrade(this.getWritableDatabase(), 1, 2);
+        this.onUpgrade(this.getWritableDatabase(), 1, 2);
     }
 
     public static DBHelper getInstance(Context context) {
@@ -57,8 +57,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "uri TEXT," +
                 "caption TEXT," +
-                "description TEXT," +
-                "date TEXT" +
+                "date TEXT," +
+                "location TEXT" +
                 ")";
         db.execSQL(CREATE_TABLE);
 
@@ -75,7 +75,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS user, image");
+        db.execSQL("DROP TABLE IF EXISTS user");
+        db.execSQL("DROP TABLE IF EXISTS image");
         onCreate(db);
     }
     //

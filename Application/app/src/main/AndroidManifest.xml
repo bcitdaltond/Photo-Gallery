@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="bcitdaltond.application">
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -17,6 +20,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <!-- Put your Google Maps V2 API Key here. -->
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyC_Vir7mv92A3kE7iY5QocaXH5TLiJkIZM" />
+
         <activity
             android:name=".myActivities.GalleryActivity"
             android:label="@string/title_activity_gallery"
@@ -28,8 +34,6 @@
             </intent-filter>
 
         </activity>
-        <activity android:name=".testActivities.MainActivity" />
-        <activity android:name=".testActivities.MessageViewActivity" />
         <activity android:name=".myActivities.FilterActivity" />
         <activity android:name=".myActivities.DetailActivity" />
         <activity android:name=".myActivities.UploadActivity" />

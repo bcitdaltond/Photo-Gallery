@@ -38,7 +38,7 @@ dependencies {
         exclude module: 'support-annotations'
         exclude module: 'design'
     }
-
+    compile 'com.google.android.gms:play-services-places:9.2.0'
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
