@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.GridLayoutManager;
@@ -26,6 +27,7 @@ import android.view.MenuItem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.logging.Filter;
 
 import bcitdaltond.application.R;
 import bcitdaltond.application.myClasses.CreateList;
@@ -40,7 +42,15 @@ import bcitdaltond.application.myDatabase.Image;
 public class GalleryActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private String date = null;
+    private boolean filter = false;
+    private String date = "";
+    private String caption = "";
+    private boolean locationFilter = false;
+    private double halfdistanceLat = 0;
+    private double halfdistanceLong = 0;
+    private double middleLat = 0;
+    private double middleLong = 0;
+
     private static final int REQUEST_RUNTIME_PERMISSION = 0;
 
     @Override
@@ -57,7 +67,47 @@ public class GalleryActivity extends AppCompatActivity
         Intent intent = getIntent();
         if (intent != null) {
             //TODO: REMOVE MESSAGE
-            //date = intent.getStringExtra(FilterActivity.EXTRA_MESSAGE);
+            if (intent.hasExtra(FilterActivity.EXTRA_DATE)){
+                date = intent.getStringExtra(FilterActivity.EXTRA_DATE);
+                Log.d("EXTRA", "FOUND DATE: " + date);
+                filter = true;
+            }
+            if (intent.hasExtra(FilterActivity.EXTRA_CAPTION)) {
+                caption = intent.getStringExtra(FilterActivity.EXTRA_CAPTION);
+                Log.d("EXTRA", "FOUND CAPTION: " + caption);
+                filter = true;
+            }
+            if (intent.hasExtra(FilterActivity.EXTRA_STARTLOCATION) && intent.hasExtra(FilterActivity.EXTRA_ENDLOCATON)) {
+                String startLocation = intent.getStringExtra(FilterActivity.EXTRA_STARTLOCATION);
+                String endLocation = intent.getStringExtra(FilterActivity.EXTRA_ENDLOCATON);
+                Log.d("EXTRA", "FOUND LOCATION: " + startLocation + "-" + endLocation);
+
+                //Parse Locations
+                String[] location;
+
+                location = startLocation.split(",");
+
+                double sLatitude = Double.parseDouble(location[0]);
+                double sLongitude = Double.parseDouble(location[1]);
+
+                location = endLocation.split(",");
+                double eLatitude = Double.parseDouble(location[0]);
+                double eLongitude = Double.parseDouble(location[1]);
+
+                //Half of the distance between the start and end points
+                halfdistanceLat = (Math.abs(sLatitude - eLatitude))/2;
+                halfdistanceLong = (Math.abs(sLongitude - eLongitude))/2;
+                //Middle point between start and end
+                middleLat = (sLatitude + eLatitude)/2;
+                middleLong = (sLongitude + eLongitude)/2;
+                if (middleLat == 0 && middleLong == 0) {
+                    middleLat = sLatitude;
+                    middleLong = sLongitude;
+                }
+
+                filter = true;
+                locationFilter = true;
+            }
         }
 
         //Image Gallery
@@ -122,9 +172,9 @@ public class GalleryActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -176,82 +226,86 @@ public class GalleryActivity extends AppCompatActivity
             createList.setImage_bitmap(icon);
             theimage.add(createList);
         } else {
-            for(int i = 0; i < images.size(); i++){
-                Log.d("DATE HERE:","    DATE: " + date);
-                if (date != null) {
-                    if (images.get(i).getDate().equals("" + date)) {
-                        CreateList createList = new CreateList();
-                        //ID
-                        createList.setImage_id(i);
-                        //Caption Name
-                        createList.setImage_title(images.get(i).getCaption());
-                        //Image
-                        Uri image = Uri.parse(images.get(i).getUri());
-
-                        Bitmap thumbnail = null;
-                        try {
-                            thumbnail = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), image);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                        createList.setImage_bitmap(thumbnail);
-                        theimage.add(createList);
+            if (!filter) {
+                for(int i = 0; i < images.size(); i++) {
+                    Log.d("DATE HERE","    DATE: " + date);
+                    theimage.add(createThumbnailImage(i, images.get(i)));
+                }
+            } else {
+                for(int i = 0; i < images.size(); i++) {
+                    Log.d("DATE HERE","    DATE: " + date);
+                    if (checkFilters(images.get(i))) {
+                        theimage.add(createThumbnailImage(i, images.get(i)));
                     }
-                } else {
-                    CreateList createList = new CreateList();
-                    //ID
-                    createList.setImage_id(i);
-                    //Caption Name
-                    createList.setImage_title(images.get(i).getCaption());
-                    //Image
-                    Uri image = Uri.parse(images.get(i).getUri());
-
-//                    Bitmap thumbnail = null;
-//                    try {
-//                        thumbnail = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), image);
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-
-                    Bitmap thumbnail = null;
-                    try {
-                        InputStream image_stream = getContentResolver().openInputStream(image);
-                        thumbnail = BitmapFactory.decodeStream(image_stream );
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-
-
-                    createList.setImage_bitmap(thumbnail);
-                    theimage.add(createList);
                 }
             }
         }
+        if (theimage.size() == 0) {
+            //Dummy Picture and Title Name
+            final String image_titles = "No Images Found";
+            //final Integer image_ids = R.drawable.icon;
 
-//
-//        for(int i = 0; i< image_titles.length; i++){
-//            //DBHelper.getInstance(this).addImage(new Image(0,image_ids[i], "caption","description", "date"));
-//            Log.d("DATE HERE:","    DATE: " + date);
-//            if (date != null) {
-//                if (image_dates[i].equals("" + date)) {
-//                    CreateList createList = new CreateList();
-//                    createList.setImage_title(image_titles[i]);
-//                    createList.setImage_ID(image_ids[i]);
-//                    theimage.add(createList);
-//                }
-//            } else {
-//                CreateList createList = new CreateList();
-//                createList.setImage_title(image_titles[i]);
-//                createList.setImage_ID(image_ids[i]);
-//                theimage.add(createList);
-//            }
-//        }
+            CreateList createList = new CreateList();
+            createList.setImage_id(-2);
+            createList.setImage_title(image_titles);
+            //Bitmap icon = BitmapFactory.decodeResource(this.getResources(),
+            //        image_ids);
+            //createList.setImage_bitmap(icon);
+            theimage.add(createList);
+        }
         return theimage;
     }
 
-    void checkPermissions() {
+    private CreateList createThumbnailImage(int id, Image i) {
+        CreateList createList = new CreateList();
+        //ID
+        createList.setImage_id(id);
+        //Caption Name
+        createList.setImage_title(i.getCaption());
+        //Image
+        Uri image = Uri.parse(i.getUri());
+
+        Bitmap thumbnail = null;
+        try {
+            thumbnail = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), image);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        createList.setImage_bitmap(thumbnail);
+        return createList;
+    }
+
+    private boolean checkFilters(Image i) {
+        if (!date.isEmpty()) {
+            if (!i.getDate().equals(date)) {
+                return false;
+            }
+        }
+        if (!caption.isEmpty()) {
+            Log.d("Image Caption",i.getCaption());
+            Log.d("Image Caption",caption);
+            if (!i.getCaption().equals(caption)) {
+                return false;
+            }
+        }
+        if (locationFilter) {
+            //Parse Location
+            String[] location = i.getLocation().split(",");
+            double latitude = Double.parseDouble(location[0]);
+            double longitude = Double.parseDouble(location[1]);
+            double distanceLat = Math.abs(latitude - middleLat);
+            double distanceLong = Math.abs(longitude - middleLong);
+            //Distance between middle and point must be within half the distance of start and end.
+            if ((distanceLat > halfdistanceLat ) || (distanceLong > halfdistanceLong)) {
+                return false;
+            }
+        }
+        Log.d("Filter", "Image Passed");
+        return true;
+    }
+
+    private void checkPermissions() {
         //select which permission you want
         final String permission = Manifest.permission.CAMERA;
         //final String permission = Manifest.permission.Storage;
@@ -264,6 +318,7 @@ public class GalleryActivity extends AppCompatActivity
                 ActivityCompat.requestPermissions(GalleryActivity.this, new String[]{Manifest.permission.CAMERA,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.INTERNET, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_RUNTIME_PERMISSION);
             }
         } else {
+            Log.d("Permissions", "PASSED");
             // you have permission go ahead
             // ignored
         }
@@ -288,3 +343,53 @@ public class GalleryActivity extends AppCompatActivity
         }
     }
 }
+
+
+//                else {
+//                    CreateList createList = new CreateList();
+//                    //ID
+//                    createList.setImage_id(i);
+//                    //Caption Name
+//                    createList.setImage_title(images.get(i).getCaption());
+//                    //Image
+//                    Uri image = Uri.parse(images.get(i).getUri());
+//
+////                    Bitmap thumbnail = null;
+////                    try {
+////                        thumbnail = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), image);
+////                    } catch (IOException e) {
+////                        e.printStackTrace();
+////                    }
+//
+//                    Bitmap thumbnail = null;
+//                    try {
+//                        InputStream image_stream = getContentResolver().openInputStream(image);
+//                        thumbnail = BitmapFactory.decodeStream(image_stream );
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//
+//
+//                    createList.setImage_bitmap(thumbnail);
+//                    theimage.add(createList);
+//                }
+
+//
+//        for(int i = 0; i< image_titles.length; i++){
+//            //DBHelper.getInstance(this).addImage(new Image(0,image_ids[i], "caption","description", "date"));
+//            Log.d("DATE HERE:","    DATE: " + date);
+//            if (date != null) {
+//                if (image_dates[i].equals("" + date)) {
+//                    CreateList createList = new CreateList();
+//                    createList.setImage_title(image_titles[i]);
+//                    createList.setImage_ID(image_ids[i]);
+//                    theimage.add(createList);
+//                }
+//            } else {
+//                CreateList createList = new CreateList();
+//                createList.setImage_title(image_titles[i]);
+//                createList.setImage_ID(image_ids[i]);
+//                theimage.add(createList);
+//            }
+//        }

@@ -37,7 +37,7 @@ public class DBHelper extends SQLiteOpenHelper {
     private DBHelper(Context context) {
         super(context, DATABASE_NAME , null, DATABASE_VERSION);
         //Uncomment this to update the database to change column layout
-        this.onUpgrade(this.getWritableDatabase(), 1, 2);
+        //this.onUpgrade(this.getWritableDatabase(), 1, 2);
     }
 
     public static DBHelper getInstance(Context context) {

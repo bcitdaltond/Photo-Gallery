@@ -2,9 +2,13 @@ package bcitdaltond.application.myActivities;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -15,12 +19,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlacePicker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -35,15 +46,19 @@ import bcitdaltond.application.R;
 import bcitdaltond.application.myDatabase.DBHelper;
 import bcitdaltond.application.myDatabase.Image;
 
-public class UploadActivity extends AppCompatActivity {
+public class UploadActivity extends AppCompatActivity implements LocationListener {
 
-    private String dir = null;
+    private final int REQUEST_CAMERA = 0;
+    private final int SELECT_FILE = 1;
+    private final int PLACE_PICKER_REQUEST = 2;
+    protected LocationManager locationManager;
+
     private ImageView ivImage = null;
     private EditText editCaption = null;
     private TextView editDate = null;
-    private final int REQUEST_CAMERA = 0;
-    private final int SELECT_FILE = 1;
+    private TextView editLocation = null;
 
+    private String dir = null;
     private Uri currentURI = null;
 
     private int mYear;
@@ -74,6 +89,18 @@ public class UploadActivity extends AppCompatActivity {
         mMonth = mcurrentDate.get(Calendar.MONTH);
         mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
 
+        //Display location
+        editLocation = (TextView) findViewById(R.id.locationText);
+        editLocation.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                pickLocation();
+                return false;
+            }
+        });
+        editLocation.setText("0.0,0.0");
+        getLocation();
+
         editDate.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -98,6 +125,55 @@ public class UploadActivity extends AppCompatActivity {
             }
         });
         editDate.setText("" + (mMonth + 1) + "-" + mDay + "-" + mYear);
+    }
+
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        //Toast.makeText(this, "Current Location: " + location.getLatitude() + ", " + location.getLongitude(), Toast.LENGTH_LONG).show();
+        //locationText.setText("Current Location: " + location.getLatitude() + ", " + location.getLongitude());
+        Log.d("Location: ", location.getLatitude() + ", " + location.getLongitude());
+        double latitude = round(location.getLatitude(), 2);
+        double longitude = round(location.getLongitude(), 2);
+        editLocation.setText((latitude + "," + longitude));
+        locationManager.removeUpdates(this);
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Toast.makeText(this, "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
+    @Override
+    public void onProviderEnabled(String provider) {}
+
+    public void getLocation() {
+        try {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, this);
+        }
+        catch(SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void pickLocation() {
+        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+        try {
+            startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -186,7 +262,18 @@ public class UploadActivity extends AppCompatActivity {
                 onSelectFromGalleryResult(data);
             else if (requestCode == REQUEST_CAMERA)
                 onCaptureImageResult(data);
+            else if (requestCode == PLACE_PICKER_REQUEST)
+                onSelectLocation(data);
         }
+    }
+
+    private void onSelectLocation(Intent data) {
+        Place place = PlacePicker.getPlace(data, this);
+        Log.d("LOCATION!", "" + place.getLatLng());
+
+        double latitude = round(place.getLatLng().latitude, 2);
+        double longitude = round(place.getLatLng().longitude, 2);
+        editLocation.setText(("" + latitude + "," + longitude));
     }
 
     @SuppressWarnings("deprecation")
@@ -235,7 +322,19 @@ public class UploadActivity extends AppCompatActivity {
 
     public void uploadPicture(View view) {
         //Do some database work here...
-        if (editCaption.getText().toString().equals("")) {
+        if (currentURI == null) {
+            new AlertDialog.Builder(UploadActivity.this)
+                    .setTitle("Missing Photo")
+                    .setMessage("Must upload a photo!")
+                    .setCancelable(true)
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //ignored
+                        }
+                    })
+                    .show();
+        } else if (editCaption.getText().toString().equals("")) {
             new AlertDialog.Builder(UploadActivity.this)
                     .setTitle("Missing Input")
                     .setMessage("Uploaded photo's must have a Caption")
@@ -254,7 +353,7 @@ public class UploadActivity extends AppCompatActivity {
                             currentURI.toString(),
                             editCaption.getText().toString(),
                             "" + (mMonth + 1) + "-" + mDay + "-" + mYear,
-                            "0.0,0.0")
+                            editLocation.getText().toString())
             );
             Intent intent = new Intent(this, GalleryActivity.class);
             //TODO: REMOVE MESSAGE

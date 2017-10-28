@@ -68,6 +68,18 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                                 }
                             })
                             .show();
+                } else if (createList.getImage_id() == -2) {
+                    new AlertDialog.Builder(v.getContext())
+                            .setTitle("Filter")
+                            .setMessage("No Images were found using current filters")
+                            .setCancelable(true)
+                            .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    //ignored
+                                }
+                            })
+                            .show();
                 } else {
                     String EXTRA_MESSAGE = "bcitdaltond.application.image.ID";
                     Intent intent = new Intent(v.getContext(), DetailActivity.class);

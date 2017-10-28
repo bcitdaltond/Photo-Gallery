@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -47,8 +46,6 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
     private TextView endLocationText;
     private TextView editDate;
 
-    private String caption;
-
     private double sLongitude;
     private double sLatitude;
     private double eLongitude;
@@ -83,6 +80,7 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
         mMonth = mcurrentDate.get(Calendar.MONTH);
         mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
 
+        getLocation();
 
         editDate.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -107,7 +105,7 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
                 return false;
             }
         });
-        editDate.setText("" + (mMonth + 1) + "-" + mDay + "-" + mYear);
+        editDate.setText(("" + (mMonth + 1) + "-" + mDay + "-" + mYear));
     }
 
     public void setDate(int year, int month, int day) {
@@ -116,7 +114,7 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
         mYear = year;
         mMonth = month;
         mDay = day;
-        editDate.setText("" + (month + 1) + "-" + day + "-" + year  );
+        editDate.setText(("" + (month + 1) + "-" + day + "-" + year));
     }
 
 
@@ -125,10 +123,16 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
         //Toast.makeText(this, "Current Location: " + location.getLatitude() + ", " + location.getLongitude(), Toast.LENGTH_LONG).show();
         //locationText.setText("Current Location: " + location.getLatitude() + ", " + location.getLongitude());
         Log.d("Location: ", location.getLatitude() + ", " + location.getLongitude());
-        sLongitude = location.getLatitude();
-        sLatitude = location.getLongitude();
-        eLongitude = location.getLatitude();
-        eLatitude = location.getLongitude();
+        double latitude = round(location.getLatitude(), 2);
+        double longitude = round(location.getLongitude(), 2);
+
+        sLatitude = latitude;
+        sLongitude = longitude;
+        startLocationText.setText((sLatitude + "," + sLongitude));
+
+        eLatitude = latitude;
+        eLongitude = longitude;
+        endLocationText.setText((eLatitude + "," + eLongitude));
 
         locationManager.removeUpdates(this);
     }
@@ -163,7 +167,7 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
         }
     }
 
-    public void getLocation(View view) {
+    public void getLocation() {
         try {
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, this);
@@ -193,7 +197,7 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
         double longitude = round(place.getLatLng().longitude, 2);
         sLatitude = latitude;
         sLongitude = longitude;
-        startLocationText.setText("" + latitude + "," + longitude);
+        startLocationText.setText(("" + latitude + "," + longitude));
     }
 
     private void onSelectEndLocation(Intent data) {
@@ -204,7 +208,7 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
         double longitude = round(place.getLatLng().longitude, 2);
         eLatitude = latitude;
         sLongitude = longitude;
-        endLocationText.setText("" + latitude + "," + longitude);
+        endLocationText.setText(("" + latitude + "," + longitude));
     }
 
     public static double round(double value, int places) {
@@ -261,17 +265,21 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
         removeFilters();
         Intent intent = new Intent(this, GalleryActivity.class);
         if (editCaption.isEnabled()) {
-            caption = editCaption.getText().toString();
-            if (caption != null || !caption.isEmpty() || !caption.equals("")) {
-                intent.putExtra(EXTRA_CAPTION, "");
+            String caption = editCaption.getText().toString();
+            if (!caption.isEmpty() || !caption.equals("")) {
+                intent.putExtra(EXTRA_CAPTION, caption);
+                Log.d("Caption: ", "INFO: " + caption);
+                Log.d("EXTRA: ", "Caption Added To Intent");
             }
         }
         if (startLocationButton.isEnabled() || endLocationButton.isEnabled()) {
             intent.putExtra(EXTRA_STARTLOCATION, "" + sLatitude + "," + sLongitude);
             intent.putExtra(EXTRA_ENDLOCATON, "" + eLatitude + "," + eLongitude);
+            Log.d("EXTRA: ", "Location Added To Intent");
         }
         if (editDate.isEnabled()) {
             intent.putExtra(EXTRA_DATE, "" + (mMonth + 1) + "-" + mDay + "-" + mYear);
+            Log.d("EXTRA: ", "Date Added To Intent");
         }
         startActivity(intent);
     }
