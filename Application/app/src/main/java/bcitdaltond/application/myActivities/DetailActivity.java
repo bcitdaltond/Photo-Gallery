@@ -8,6 +8,7 @@ import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -15,8 +16,10 @@ import android.widget.TextView;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import bcitdaltond.application.R;
+import bcitdaltond.application.myClasses.CreateList;
 import bcitdaltond.application.myDatabase.DBHelper;
 import bcitdaltond.application.myDatabase.Image;
 
@@ -46,7 +49,10 @@ public class DetailActivity extends AppCompatActivity {
             }
         }
         id = intent.getIntExtra(EXTRA_MESSAGE, 0) + 1;
-        Image image = DBHelper.getInstance(this).getImage("" + id);
+        Log.d("ID", "" + id);
+        Image image = DBHelper.getInstance(this).getAllImages().get(id);
+
+
 
         imageView = (ImageView) findViewById(R.id.imageView);
         Bitmap thumbnail = null;
@@ -141,6 +147,12 @@ public class DetailActivity extends AppCompatActivity {
         Intent intent = new Intent(this, GalleryActivity.class);
         //TODO: REMOVE MESSAGE
         //getIntent().removeExtra(FilterActivity.EXTRA_MESSAGE);
+        startActivity(intent);
+    }
+
+    public void sharing(View view) {
+        String sharerUrl = "https://www.facebook.com/sharer/sharer.php?u=" + "Stuff";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(sharerUrl));
         startActivity(intent);
     }
 }
