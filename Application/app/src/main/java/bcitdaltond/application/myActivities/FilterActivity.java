@@ -69,8 +69,10 @@ public class FilterActivity extends AppCompatActivity implements LocationListene
         endLocationButton.setEnabled(false);
 
         startLocationText = (TextView)findViewById(R.id.startlocation);
+        startLocationText.setText("0.0,0.0");
         startLocationText.setEnabled(false);
         endLocationText = (TextView)findViewById(R.id.endlocation);
+        endLocationText.setText("0.0,0.0");
         endLocationText.setEnabled(false);
         editDate = (TextView) findViewById(R.id.dateText);
         editDate.setEnabled(false);

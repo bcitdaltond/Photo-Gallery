@@ -45,7 +45,7 @@ public class ExampleInstrumentedTest {
 
     private void addImages() {
         for (int i = 10; i < 20; i++) {
-            Image img = new Image(i, "uri" + i, "caption", "description", "9-" + i + "-2017");
+            Image img = new Image(i, "uri" + i, "caption", "9-" + i + "-2017", "0.0,0.0");
             dbHelper.addImage(img);
         }
     }
